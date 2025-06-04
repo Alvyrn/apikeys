@@ -9,7 +9,7 @@ with open("key.json") as f:
     key = json.load(f)["api_key"]
 
 genai.configure(api_key=key)
-model = genai.GenerativeModel("models/gemini-pro")
+model = genai.GenerativeModel("models/gemini-1.5-pro-001") 
 
 @app.route("/")
 def index():
