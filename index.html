@@ -2,29 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gemini AI Web App</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gemini Chat</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <h1>Ask Gemini AI</h1>
-  <textarea id="userInput" placeholder="Ask something..."></textarea>
-  <button onclick="sendToBackend()">Ask</button>
-  <pre id="response"></pre>
+  <div class="chat-container">
+    <h1>💬 Gemini AI Chat</h1>
+    <div id="chat-box" class="chat-box"></div>
+    <div class="input-area">
+      <textarea id="userInput" placeholder="Ask me anything..."></textarea>
+      <button onclick="sendToBackend()">Send</button>
+    </div>
+  </div>
 
   <script>
     async function sendToBackend() {
-      const userInput = document.getElementById("userInput").value;
-      const responseBox = document.getElementById("response");
+      const input = document.getElementById("userInput").value;
+      const chatBox = document.getElementById("chat-box");
 
-      const response = await fetch("/ask", {
+      chatBox.innerHTML += `<div class="user-msg"><strong>You:</strong> ${input}</div>`;
+      document.getElementById("userInput").value = "";
+
+      const res = await fetch("/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: userInput }),
+        body: JSON.stringify({ question: input }),
       });
 
-      const data = await response.json();
-      responseBox.textContent = data.answer;
+      const data = await res.json();
+      chatBox.innerHTML += `<div class="ai-msg"><strong>Gemini:</strong> ${data.answer}</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
   </script>
 </body>
