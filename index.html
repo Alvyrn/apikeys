@@ -1,39 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Gemini Chat</title>
+  <meta charset="UTF-8">
+  <title>Gemini AI Chat</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="chat-container">
-    <h1>🧠 Gemini AI Chat</h1>
-    <div id="chat-box" class="chat-box"></div>
+  <div class="container">
+    <h1>⚡ Gemini Chat</h1>
+    <div id="chat-box"></div>
     <div class="input-area">
-      <textarea id="userInput" placeholder="Ask something smart..."></textarea>
-      <button onclick="sendToBackend()">Send</button>
+      <input type="text" id="userInput" placeholder="Ask Gemini something...">
+      <button onclick="sendToGemini()">Send</button>
     </div>
   </div>
 
-  <script>
-    async function sendToBackend() {
-      const input = document.getElementById("userInput").value;
-      const chatBox = document.getElementById("chat-box");
-
-      chatBox.innerHTML += `<div class="user-msg"><strong>You:</strong> ${input}</div>`;
-      document.getElementById("userInput").value = "";
-
-      const res = await fetch("/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: input }),
-      });
-
-      const data = await res.json();
-      chatBox.innerHTML += `<div class="ai-msg"><strong>Gemini:</strong> ${data.answer}</div>`;
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-  </script>
+  <script src="gemini.js"></script>
 </body>
 </html>
