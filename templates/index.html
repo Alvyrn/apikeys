@@ -1,0 +1,41 @@
+<script>
+  const form = document.getElementById('chat-form');
+  const input = document.getElementById('user-input');
+  const chatBox = document.getElementById('chat-box');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const userText = input.value.trim();
+    if (!userText) return;
+
+    appendMessage('You', userText);
+    input.value = '';
+
+    // Show "thinking" placeholder
+    const thinkingMsg = appendMessage('AI', 'Thinking...');
+    
+    try {
+      const res = await fetch('/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: userText })
+      });
+
+      const data = await res.json();
+
+      // Update the same AI message div
+      thinkingMsg.innerHTML = `<strong>AI:</strong> ${data.response || '[No response]'}`;
+    } catch (err) {
+      thinkingMsg.innerHTML = `<strong>AI:</strong> [Error getting response]`;
+    }
+  });
+
+  function appendMessage(sender, message) {
+    const msg = document.createElement('div');
+    msg.classList.add('message');
+    msg.innerHTML = `<strong>${sender}:</strong> ${message}`;
+    chatBox.appendChild(msg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return msg;
+  }
+</script>
