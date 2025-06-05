@@ -1,12 +1,17 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, render_template, request, jsonify
 import requests
 import json
 
 app = Flask(__name__)
 
-with open("key.json") as f:
-    data = json.load(f)
-    API_KEY = data["key"]
+# ✅ Read API key from key.json
+try:
+    with open("key.txt") as f:
+        API_KEY = f.read().strip()
+except Exception as e:
+    print(f"Failed to read key.txt: {e}")
+    API_KEY = None
+
 
 @app.route("/")
 def home():
@@ -14,30 +19,31 @@ def home():
 
 @app.route("/ask", methods=["POST"])
 def ask():
-    prompt = request.json.get("prompt")
+    if not API_KEY:
+        return jsonify({"response": "[Error: API key not loaded]"})
+
+    user_input = request.json.get("prompt", "")
 
     headers = {
         "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
     }
 
     payload = {
-        "model": "openai/gpt-3.5-turbo",
-        "messages": [{"role": "user", "content": prompt}]
+        "model": "openai/gpt-3.5-turbo",  # change model if needed
+        "messages": [
+            {"role": "user", "content": user_input}
+        ]
     }
 
-    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
-
-    if response.status_code == 200:
-        data = response.json()
-        try:
-            reply = data['choices'][0]['message']['content']
-        except Exception:
-            reply = "[Unexpected response structure]"
-    else:
-        reply = f"[API Error {response.status_code}]"
-
-    return jsonify({"response": reply})
+    try:
+        r = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+        data = r.json()
+        if r.status_code != 200:
+            return jsonify({"response": f"[API Error {r.status_code}: {data.get('error', {}).get('message', 'Unknown')}]"})
+        return jsonify({"response": data["choices"][0]["message"]["content"]})
+    except Exception as e:
+        return jsonify({"response": f"[Internal Error: {str(e)}]"})
 
 if __name__ == "__main__":
     app.run(debug=True)
