@@ -4,17 +4,9 @@ import json
 
 app = Flask(__name__)
 
-# Load API key from key.json
 with open("key.json") as f:
-    API_KEY = json.load(f)["api_key"]
-
-HEADERS = {
-    "Authorization": f"Bearer {API_KEY}",
-    "Content-Type": "application/json"
-}
-
-API_URL = "https://openrouter.ai/api/v1/chat/completions"
-MODEL = "openai/gpt-3.5-turbo"  # You can change to any supported model
+    data = json.load(f)
+    API_KEY = data["key"]
 
 @app.route("/")
 def home():
@@ -22,23 +14,30 @@ def home():
 
 @app.route("/ask", methods=["POST"])
 def ask():
-    data = request.json
-    prompt = data.get("prompt", "")
+    prompt = request.json.get("prompt")
 
-    payload = {
-        "model": MODEL,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ]
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json",
     }
 
-    response = requests.post(API_URL, headers=HEADERS, json=payload)
+    payload = {
+        "model": "openai/gpt-3.5-turbo",
+        "messages": [{"role": "user", "content": prompt}]
+    }
+
+    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
 
     if response.status_code == 200:
-        reply = response.json()["choices"][0]["message"]["content"]
-        return jsonify({"reply": reply})
+        data = response.json()
+        try:
+            reply = data['choices'][0]['message']['content']
+        except Exception:
+            reply = "[Unexpected response structure]"
     else:
-        return jsonify({"error": response.text}), response.status_code
+        reply = f"[API Error {response.status_code}]"
+
+    return jsonify({"response": reply})
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=True)
